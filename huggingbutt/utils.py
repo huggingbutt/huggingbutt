@@ -1,8 +1,3 @@
-"""
-function descriptions
-zhengliang zhang @ shizhuang.inc
-"""
-import sys
 import os
 import zipfile
 from pathlib import Path
@@ -23,6 +18,7 @@ def set_access_token(token):
 
 def check_path(path):
     return os.path.exists(path)
+
 
 def file_exists(path):
     if not os.path.exists(path):
@@ -103,7 +99,4 @@ def extract_env(user_name, env_name, version):
     zip_file = env_download_dest_path(user_name, env_name, version)
     dest_path = local_env_path(user_name, env_name, version)
     extract(zip_file, dest_path)
-    # todo ...
-    # Add executable permission to the env file.
-    # ***.app/Contents/MacOS/***
 

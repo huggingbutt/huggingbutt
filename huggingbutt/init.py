@@ -1,7 +1,3 @@
-"""
-function descriptions
-zhengliang zhang @ shizhuang.inc
-"""
 import os
 from huggingbutt import settings
 from huggingbutt import utils

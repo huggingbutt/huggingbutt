@@ -1,7 +1,3 @@
-"""
-function descriptions
-zhengliang zhang @ shizhuang.inc
-"""
 import os
 import requests
 from pathlib import Path

@@ -1,8 +1,3 @@
-"""
-function descriptions
-zhengliang zhang @ shizhuang.inc
-"""
-
 class HBException(Exception):
     def __init__(self, message=''):
         self.message = message
