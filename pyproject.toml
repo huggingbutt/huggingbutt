@@ -2,12 +2,9 @@
 requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
-[tool.setuptools]
-py-modules = ["huggingbutt"]
-
 [project]
 name = "huggingbutt"
-version = "0.0.1d"
+version = "0.0.1"
 authors = [
   { name="huggingbutt", email="huggingbutt@outlook.com" },
 ]

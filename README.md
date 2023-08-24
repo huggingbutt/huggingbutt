@@ -29,15 +29,15 @@ If there is no error message printed during the installation, congratulations, y
 
 Register an account and login, just do as shown in the image below.
 
-![image](images/tokens_link.png)
+![image](https://raw.githubusercontent.com/huggingbutt/media_store/main/huggingbutt_readme/tokens_link.png)
 
 Click new token button generate a new token. This access token is mainly used to restrict the download times of each user, as the server cost is relatively high.
 
-![image](images/new_tokens_buttong.png)
+![image](https://raw.githubusercontent.com/huggingbutt/media_store/main/huggingbutt_readme/new_tokens_buttong.png)
 
 Congratulations, you now have an access token!
 
-![image](images/copy_your_token.png)
+![image](https://raw.githubusercontent.com/huggingbutt/media_store/main/huggingbutt_readme/copy_your_token.png)
 
 Just put the generated token in the task code and you're gooooood to go.
 
