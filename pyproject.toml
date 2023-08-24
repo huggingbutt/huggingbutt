@@ -7,7 +7,7 @@ py-modules = ["huggingbutt"]
 
 [project]
 name = "huggingbutt"
-version = "0.0.1c"
+version = "0.0.1d"
 authors = [
   { name="huggingbutt", email="huggingbutt@outlook.com" },
 ]
