@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "huggingbutt"
+version = "0.0.1c"
+authors = [
+  { name="huggingbutt", email="huggingbutt@outlook.com" },
+]
+description = "Client library to download and publish environments, agents on the huggingbutt.com hub"
+readme = "README.md"
+requires-python = ">=3.8.13"
+dependencies = [
+    "protobuf==3.20",
+    "tqdm",
+    "requests",
+    "stable_baselines3==2.1.0",
+    "mlagents-envs>=0.30.0",
+    "toml"
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence"
+]
+
+[project.urls]
+homepage = "https://huggingbutt.com"
+source  = "https://github.com/huggingbutt/huggingbutt"
