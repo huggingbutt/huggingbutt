@@ -1,5 +1,5 @@
 # HuggingButt
-Client library to download and publish environments, agents on the huggingbutt.com hub
+Client library to download and publish reinforcement learning environments, agents on the huggingbutt.com hub
 
 ## Installation
 After testing, this package can run stably under python version 3.9 on Windows/MacOS platform. Other versions of python may not be able to install this package, mainly because mlagents-envs has not been updated recently. I will address these issues later on. 
