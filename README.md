@@ -1,4 +1,4 @@
-# HuggingButt Python Client 
+# HuggingButt
 Client library to download and publish environments, agents on the huggingbutt.com hub
 
 ## Installation
@@ -20,7 +20,7 @@ pip install huggingbutt
 ```
 or from source code
 ```shell
-git clone xxx
+git clone https://github.com/huggingbutt/huggingbutt.git
 cd huggingbutt
 python -m pip install .
 ```
