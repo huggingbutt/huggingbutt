@@ -8,4 +8,4 @@ if __name__ == '__main__':
     model = PPO('MlpPolicy', env, verbose=1)
     model.learn(total_timesteps=2500)
     model.save('ppo_juggle.model')
-    model.close()
+    env.close()
