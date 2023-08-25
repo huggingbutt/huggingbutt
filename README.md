@@ -25,7 +25,7 @@ cd huggingbutt
 python -m pip install .
 ```
 
-If there is no error message printed during the installation, congratulations, you have successfully installed this package. Next, you need to apply an access token from the official website http://huggingbutt.com.
+If there is no error message printed during the installation, congratulations, you have successfully installed this package. Next, you need to apply an access token from the official website https://huggingbutt.com.
 
 Register an account and login, just do as shown in the image below.
 
