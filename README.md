@@ -56,3 +56,8 @@ if __name__ == '__main__':
     model.save("ppo_juggle.model")
     env.close()
 ```
+
+## todo
+1. Save the agent model in onnx format and specify this model for the environment.
+2. Develop a framework, and user can easily customize the observation, action and reward of the environment developed under this framework through configuration file. We hope this makes it easier for everyone to iterate over the environment's agent.
+3. There are still many ideas, I will add them later when I think about them...
