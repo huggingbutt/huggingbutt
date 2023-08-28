@@ -58,6 +58,6 @@ if __name__ == '__main__':
 ```
 
 ## todo
-1. Save the agent model in onnx format and specify this model for the environment.
+1. Save and upload the training logs, other users can adjust parameters base on these logs to get better results.
 2. Develop a framework, and user can easily customize the observation, action and reward of the environment developed under this framework through configuration file. We hope this makes it easier for everyone to iterate over the environment's agent.
 3. There are still many ideas, I will add them later when I think about them...
