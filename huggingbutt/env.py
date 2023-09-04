@@ -53,8 +53,9 @@ class Env(object):
         self.env_path: str = env_path
         self.config: dict = None
         self.exe_file = None
-        self.load_config()
         self.gym_env: DummyVecEnv = None
+        self.load_config()
+
 
     def load_config(self):
         """
@@ -84,7 +85,7 @@ class Env(object):
         if self.exe_file is None:
             raise RuntimeError("Exe file is not defined in configuration file.")
         else:
-            if not os.path.isfile(self.exe_file):
+            if not os.path.exists(self.exe_file):
                 raise RuntimeError(f"{self.exe_file} is not found.")
 
     def make_gym_env(self):
@@ -136,12 +137,14 @@ class Env(object):
         return instance
 
     def close(self):
-        self.gym_env.close()
+        try:
+            if self.gym_env._loaded:
+                self.gym_env.close()
+        except:
+            pass
 
     def __del__(self):
-        print("Destroy env.")
-        if self.gym_env:
-            self.close()
+        self.close()
 
     # todo
     def check_config_file(self):

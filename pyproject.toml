@@ -17,7 +17,9 @@ dependencies = [
     "requests",
     "stable_baselines3==2.1.0",
     "mlagents-envs>=0.30.0",
-    "toml"
+    "toml",
+    "tensorboard",
+    "pandas"
 ]
 classifiers = [
     "Programming Language :: Python :: 3",
