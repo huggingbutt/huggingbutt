@@ -137,11 +137,7 @@ class Env(object):
         return instance
 
     def close(self):
-        try:
-            if self.gym_env._loaded:
-                self.gym_env.close()
-        except:
-            pass
+        self.gym_env.close()
 
     def __del__(self):
         self.close()
