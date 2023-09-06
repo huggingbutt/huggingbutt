@@ -84,12 +84,12 @@ def download_env(user_name: str, env_name: str, version: str):
     # todo...
     # Download the latest version by default.
     # if version == 'latest':
-    #     version = get_latest_version(user_name, env_name)
+    #     version = get_remote_latest_version(user_name, env_name)
     # if version == '':
     #     raise VersionNotFoundException()
 
     logger.info(f"Download {user_name}/{env_name}:{version}.")
-    env_url = f"{settings.hub_url}/download/envs/{user_name}/{env_name}_{version}.zip"
+    env_url = f"{settings.hub_url}/download/env/{user_name}/{env_name}_{version}.zip"
     dest_path = utils.env_download_dest_path(user_name, env_name, version)
     download(env_url, dest_path)
 

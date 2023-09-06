@@ -45,17 +45,16 @@ def get_latest_checkpoint(path: str) -> (str, int):
     if not os.path.isabs(path):
         path = os.path.abspath(path)
 
-    if not os.path.exists(path):
-        raise RuntimeError(f"{path} is not exists.")
+    assert os.path.exists(path), f"{path} is not exists."
 
     files = []
     for f in os.listdir(file_exists(path)):
         if os.path.isfile(os.path.join(path, f)) and f.endswith('.zip'):
             files.append(f)
 
-    if len(files) < 1:
-        raise RuntimeError("No checkpoint files found.")
-    elif len(files) == 1:
+    assert len(files) > 0, "No checkpoint files found."
+
+    if len(files) == 1:
         latest_file = files[0]
     else:
         sorted(files, key=cmp_to_key(timesteps_sort))
@@ -173,8 +172,7 @@ class Agent:
         :param progress_bar:
         :return:
         """
-        if self.env is None:
-            raise RuntimeError('')
+        assert self.env is not None, "env is None"
 
         self.total_timesteps = total_timesteps  # I think this is your target or wanted total time steps.
 
@@ -245,7 +243,7 @@ class Agent:
             self.model.save(path)
 
     @classmethod
-    def get_pretrained(cls):
+    def get(cls, agent_id: int, env: Env = None):
         print(cls)
 
 

@@ -69,10 +69,8 @@ def succ_env_path(user_name, env_name, version):
 
 def touch_succ_env(user_name, env_name, version):
     success_path = succ_env_path(user_name, env_name, version)
-    if not os.path.exists(success_path):
-        Path(success_path).touch()
-    else:
-        raise FileExistsError("File is exists.")
+    assert os.path.exists(success_path), f"{success_path} not found."
+    Path(success_path).touch()
 
 
 def agent_download_dest_path(user_name: str, agent_name: str, version: str, env_user_name: str, env_name: str):
@@ -83,13 +81,11 @@ def agent_download_dest_path(user_name: str, agent_name: str, version: str, env_
     :param version:
     :return:
     """
-    desc_files = os.path.join(settings.real_cache_path, 'zip', f"{user_name}@{agent_name}@{version}@{env_user_name}@{env_name}.zip")
+    return os.path.join(settings.real_cache_path, 'zip', f"{user_name}@{agent_name}@{version}@{env_user_name}@{env_name}.zip")
 
 
 def local_env_path(user_name, env_name, version):
     return os.path.join(settings.env_path, user_name, env_name, version)
-
-
 
 
 def extract(zip_path, dest_path):
@@ -101,7 +97,6 @@ def extract_env(user_name, env_name, version):
     zip_file = env_download_dest_path(user_name, env_name, version)
     dest_path = local_env_path(user_name, env_name, version)
     extract(zip_file, dest_path)
-
 
 
 def extract_tb_log(path: str) -> pd.DataFrame:
@@ -121,8 +116,7 @@ def extract_tb_log(path: str) -> pd.DataFrame:
                 event_file = os.path.join(root, file)
                 break
 
-    if not event_file:
-        raise RuntimeError("Not found tensorboard events log file.")
+    assert event_file != '', "Not found tensorboard events log file."
 
     # load the event log file
     ea = event_accumulator.EventAccumulator(event_file)
@@ -130,8 +124,7 @@ def extract_tb_log(path: str) -> pd.DataFrame:
 
     # get all usable matrices
     metrics = ea.Tags().get('scalars')
-    if len(metrics) < 1:
-        raise Exception("Not found any metrics.")
+    assert len(metrics) > 0, "Not found any metrics."
 
     data = {}
     # save the step column value

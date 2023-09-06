@@ -61,10 +61,8 @@ class Env(object):
         """
         if self.env_path is None:
             maybe_path = local_env_path(self.user_name, self.env_name, self.version)
-            if os.path.exists(maybe_path):
-                self.env_path = maybe_path
-            else:
-                raise RuntimeError("The parameter env_path is not given, and did not find this environment locally.")
+            assert os.path.exists(maybe_path), "The parameter env_path is not given, and did not find this environment locally."
+            self.env_path = maybe_path
 
         config_file = os.path.join(self.env_path, 'config.toml')
         if toml.__name__ == 'toml':
