@@ -11,8 +11,6 @@ from stable_baselines3.common.vec_env.dummy_vec_env import DummyVecEnv, VecEnv
 from stable_baselines3.common.monitor import Monitor
 from typing import List
 
-
-
 if int(sys.version.split('.')[1]) > 10:
     import tomllib as toml
 else:
@@ -53,7 +51,7 @@ class Env(object):
         self.env_path: str = env_path
         self.config: dict = None
         self.exe_file = None
-        self.gym_env: DummyVecEnv = None
+        self.gym_env = None
         self.load_config()
 
 
@@ -138,9 +136,6 @@ class Env(object):
 
     def close(self):
         self.gym_env.close()
-
-    def __del__(self):
-        self.close()
 
     # todo
     def check_config_file(self):

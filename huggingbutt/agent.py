@@ -3,8 +3,7 @@ import pathlib
 from typing import Union, Type, Any, List, TypeVar
 from functools import cmp_to_key
 from abc import ABC
-import pandas as pd
-from tensorboard.backend.event_processing import event_accumulator
+from huggingbutt.utils import extract_tb_log
 from huggingbutt.env import Env
 from huggingbutt.utils import file_exists, get_logger
 from stable_baselines3.common.base_class import BaseAlgorithm
@@ -16,67 +15,6 @@ from stable_baselines3.common.policies import ActorCriticPolicy
 usable_algorithms = [PPO, A2C, DDPG, TD3, DQN, SAC]
 
 logger = get_logger(__name__)
-
-# def extract_tb_log(path: str, to_path: str=None):
-#     ea = event_accumulator.EventAccumulator('head_juggle_training_log/PPO_2/events.out.tfevents.1693655469.DESKTOP-NRBS60M.9788.0')
-
-
-def extract_tb_log(path: str) -> pd.DataFrame:
-    """
-    Extract data from tensorboard log files for upload to the server.
-    :param path:
-    :return:
-    """
-    if not os.path.isabs(path):
-        path = os.path.abspath(path)
-
-    event_file = ''
-
-    for root, dirs, files in os.walk(path):
-        for file in files:
-            if file.find('tfevents'):
-                event_file = os.path.join(root, file)
-                break
-
-    if not event_file:
-        raise RuntimeError("Not found tensorboard events log file.")
-
-    # load the event log file
-    ea = event_accumulator.EventAccumulator(event_file)
-    ea.Reload()
-
-    # get all usable matrices
-    metrics = ea.Tags().get('scalars')
-    if len(metrics) < 1:
-        raise RuntimeError("Not found any metrics.")
-
-    data = {}
-    # save the step column value
-    steps_col = []
-
-    #
-    max_length = -1
-    for m in metrics:
-        values = []
-        temp_steps = []
-        for d in ea.Scalars(m):
-            values.append(d.value)
-            temp_steps.append(d.step)
-
-        if len(values) > max_length:
-            max_length = len(values)
-            # steps_cols will always save the steps with the max length variable.
-            steps_col = temp_steps
-        data[m] = values
-
-    # Align variable lengths
-    for k, v in data.items():
-        if len(v) < max_length:
-            v.insert(0, 0)
-
-    df = pd.DataFrame(data)
-    df.insert(0, 'steps', steps_col)
-    return df
 
 
 def timesteps_sort(a, b):
@@ -107,13 +45,16 @@ def get_latest_checkpoint(path: str) -> (str, int):
     if not os.path.isabs(path):
         path = os.path.abspath(path)
 
+    if not os.path.exists(path):
+        raise RuntimeError(f"{path} is not exists.")
+
     files = []
     for f in os.listdir(file_exists(path)):
         if os.path.isfile(os.path.join(path, f)) and f.endswith('.zip'):
             files.append(f)
 
     if len(files) < 1:
-        raise RuntimeError("Checkpoint model files has not saved.")
+        raise RuntimeError("No checkpoint files found.")
     elif len(files) == 1:
         latest_file = files[0]
     else:
@@ -129,7 +70,7 @@ def get_latest_checkpoint(path: str) -> (str, int):
 
 class TrainingEndCallBack(BaseCallback, ABC):
     """
-    It will be executed after the model training is finished.
+    This class will be executed after the model training is finished.
     """
     def __init__(self, tb_log_dir: str, to_path: str):
         super().__init__()
@@ -137,34 +78,28 @@ class TrainingEndCallBack(BaseCallback, ABC):
         self.to_path = to_path
 
     def _on_training_end(self) -> None:
-        # df = extract_tb_log(self.tb_log_dir)
-        # df.to_pickle(self.to_path)
-        print("Training Over.")
+        df = extract_tb_log(self.tb_log_dir)
+        df.to_csv(self.to_path, index=False)
+        logger.info(f"Log data is stored in {self.to_path}, you can upload it to HuggingButt server.")
 
     def _on_step(self):
+        """
+        According to the description of BaseCallback, this function return True by default.
+        :return:
+        """
         return True
 
 
 def check_algorithm_class(cls: Type[BaseAlgorithm], candidates: List[Type[BaseAlgorithm]]):
+    """
+    To check parameter cls: BaseAlgorithm passed by user.
+    :param cls:
+    :param candidates:
+    :return:
+    """
     if cls in candidates:
         return cls
     raise RuntimeError(f"Type {cls} is not supported.")
-
-
-class Agent2:
-    def __init__(self, env: Env):
-        self.env = env
-        self.model = PPO(ActorCriticPolicy, env.make_gym_env(), verbose=1, tensorboard_log='tb_log')
-
-    def learn(self):
-        checkpoint_callback = CheckpointCallback(
-            save_freq=2048,
-            save_path='PPO_model'
-        )
-
-        callbacks = [checkpoint_callback, TrainingEndCallBack()]
-
-        self.model.learn(total_timesteps=20000, callback=checkpoint_callback)
 
 
 class Agent:
@@ -172,9 +107,19 @@ class Agent:
             self,
             algorithm: Type[BaseAlgorithm],
             policy: Type[BasePolicy],
-            env: Env,
+            env: Env = None,
             **kwargs,
     ):
+        """
+
+        :param algorithm:
+        :param policy:
+        :param env:
+        :param kwargs:
+        """
+        # An instance of algorithm class.
+        # It will be instantiated when the learn() function is executed.
+        self.model = None
         self.algorithm_class = check_algorithm_class(algorithm, usable_algorithms)
         self.policy_class = policy
         self.env = env
@@ -191,8 +136,6 @@ class Agent:
             except:
                 self.init_kv = dict()
 
-        self.model: BaseAlgorithm = None
-
         # learning parameters
         self.tb_log_dir: str = ''
         self.tb_log_name: str = ''
@@ -203,13 +146,12 @@ class Agent:
         self.trained_steps: int = -1
         self.train_log_upload: str = ''
 
-
     def learn(
             self,
             total_timesteps: int,
             save_freq: int = -1,
             tb_log_dir: str = None,
-            log_for_update: str = None,
+            train_log_upload: str = None,
             checkpoint_dir: str = None,
             checkpoint_name_prefix: str = None,
             log_interval: int = 1,
@@ -217,18 +159,38 @@ class Agent:
             reset_num_timesteps: bool = True,
             progress_bar: bool = False
     ):
-        self.total_timesteps = total_timesteps
+        """
+
+        :param total_timesteps:
+        :param save_freq:
+        :param tb_log_dir:
+        :param train_log_upload:
+        :param checkpoint_dir:
+        :param checkpoint_name_prefix:
+        :param log_interval:
+        :param verbose:
+        :param reset_num_timesteps:
+        :param progress_bar:
+        :return:
+        """
+        if self.env is None:
+            raise RuntimeError('')
+
+        self.total_timesteps = total_timesteps  # I think this is your target or wanted total time steps.
 
         if tb_log_dir is None:
-            self.tb_log_dir = f"{self.algorithm_class.__name__}_sb3_{self.env.env_name}_tb_log"
+            self.tb_log_dir = f"{self.env.env_name}_{self.algorithm_class.__name__.lower()}_sb3_tb_log"
         else:
             self.tb_log_dir = tb_log_dir
 
-        # tb_log_name is the event log folder name
+        # tb_log_name is the subdirectory in tensorboard log directory
         self.tb_log_name = self.algorithm_class.__name__
 
-        # self.algorithm_class(self.policy_class, self.env.make_gym_env(), verbose=1, tensorboard_log='tb_log')
-        # instance
+        if train_log_upload is None:
+            self.train_log_upload = f"{self.env.env_name}_{self.algorithm_class.__name__.lower()}_sb3_training_log_up.csv"
+        else:
+            self.train_log_upload = train_log_upload
+
         self.model = self.algorithm_class(
             self.policy_class,
             self.env.make_gym_env(),
@@ -238,7 +200,7 @@ class Agent:
         )
 
         if checkpoint_dir is None:
-            self.checkpoint_dir = f"{self.env.env_name}_sb3_model"
+            self.checkpoint_dir = f"{self.env.env_name}_{self.algorithm_class.__name__.lower()}_sb3_model"
         else:
             self.checkpoint_dir = checkpoint_dir
 
@@ -254,9 +216,9 @@ class Agent:
             save_path=self.checkpoint_dir
         )
 
-        end_callback = TrainingEndCallBack(self.tb_log_dir, )
+        end_callback = TrainingEndCallBack(self.tb_log_dir, self.train_log_upload)
 
-        callbacks = [checkpoint_callback, ]
+        callbacks = [checkpoint_callback, end_callback]
 
         self.model.learn(
             total_timesteps=total_timesteps,
@@ -270,6 +232,7 @@ class Agent:
     def save(self, path: str = None):
         if path is None:
             path = f"{self.env.env_name}_{self.algorithm_class.__name__.lower()}_sb3_model.zip"
+
         # get latest checkpoint
         latest_checkpoint, self.trained_steps = get_latest_checkpoint(self.checkpoint_dir)
 
@@ -280,8 +243,6 @@ class Agent:
         else:
             # save model
             self.model.save(path)
-
-
 
     @classmethod
     def get_pretrained(cls):

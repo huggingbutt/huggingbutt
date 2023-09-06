@@ -1,6 +1,8 @@
 import os
 import zipfile
 from pathlib import Path
+import pandas as pd
+from tensorboard.backend.event_processing import event_accumulator
 from huggingbutt import settings
 from huggingbutt.logger_util import get_logger
 
@@ -100,3 +102,62 @@ def extract_env(user_name, env_name, version):
     dest_path = local_env_path(user_name, env_name, version)
     extract(zip_file, dest_path)
 
+
+
+def extract_tb_log(path: str) -> pd.DataFrame:
+    """
+    Extract data from tensorboard log files for upload to the server.
+    :param path:
+    :return:
+    """
+    if not os.path.isabs(path):
+        path = os.path.abspath(path)
+
+    event_file = ''
+
+    for root, dirs, files in os.walk(path):
+        for file in files:
+            if file.find('tfevents'):
+                event_file = os.path.join(root, file)
+                break
+
+    if not event_file:
+        raise RuntimeError("Not found tensorboard events log file.")
+
+    # load the event log file
+    ea = event_accumulator.EventAccumulator(event_file)
+    ea.Reload()
+
+    # get all usable matrices
+    metrics = ea.Tags().get('scalars')
+    if len(metrics) < 1:
+        raise Exception("Not found any metrics.")
+
+    data = {}
+    # save the step column value
+    steps_col = []
+
+    #
+    max_length = -1
+    for m in metrics:
+        values = []
+        temp_steps = []
+        for d in ea.Scalars(m):
+            values.append(d.value)
+            temp_steps.append(d.step)
+
+        if len(values) > max_length:
+            max_length = len(values)
+            # steps_cols will always save the steps with the max length variable.
+            steps_col = temp_steps
+
+        data[m.split('/')[-1]] = values
+
+    # Align variable lengths
+    for k, v in data.items():
+        if len(v) < max_length:
+            v.insert(0, 0)
+
+    df = pd.DataFrame(data)
+    df.insert(0, 'steps', steps_col)
+    return df
