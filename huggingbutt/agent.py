@@ -1,43 +1,32 @@
 import os
 import pathlib
-from typing import Union, Type, Any, List, TypeVar
+from typing import Union, Type, Any, List, TypeVar, Dict
 from functools import cmp_to_key
 from abc import ABC
 from huggingbutt.utils import extract_tb_log
 from huggingbutt.env import Env
-from huggingbutt.utils import file_exists, get_logger
+from huggingbutt.utils import file_exists, get_logger, toml_write
 from stable_baselines3.common.base_class import BaseAlgorithm
 from stable_baselines3.common.callbacks import BaseCallback, CheckpointCallback
 from stable_baselines3.common.policies import BasePolicy
 from stable_baselines3 import PPO, A2C, DDPG, TD3, DQN, SAC
 from stable_baselines3.common.policies import ActorCriticPolicy
 
-usable_algorithms = [PPO, A2C, DDPG, TD3, DQN, SAC]
+usable_algorithms = {
+    'PPO': PPO,
+    'A2C': A2C,
+    'DDPG': DDPG,
+    'TD3': TD3,
+    'DQN': DQN,
+    'SAC': SAC
+}
 
 logger = get_logger(__name__)
 
 
-def timesteps_sort(a, b):
-    """
-    Checkpoint file is like xx_xx_{timesteps:int}_steps.zip, this cmp function is used to sorted function.
-    :param a:
-    :param b:
-    :return:
-    """
-    a = int(a.split('_')[2])
-    b = int(b.split('_')[2])
-
-    if a < b:
-        return -1
-    elif a > b:
-        return 1
-    else:
-        return 0
-
-
 def get_latest_checkpoint(path: str) -> (str, int):
     """
-    Get the latest checkpoint file base on the time steps.
+    Get the latest checkpoint file.
     This is mainly used to obtain the latest model file to avoid repeated saving.
     :param path:
     :return:
@@ -50,17 +39,17 @@ def get_latest_checkpoint(path: str) -> (str, int):
     files = []
     for f in os.listdir(file_exists(path)):
         if os.path.isfile(os.path.join(path, f)) and f.endswith('.zip'):
-            files.append(f)
+            files.append(os.path.join(path, f))
 
-    assert len(files) > 0, "No checkpoint files found."
-
-    if len(files) == 1:
+    if len(files) == 0:
+        raise FileNotFoundError('Checkpoint files found.')
+    elif len(files) == 1:
         latest_file = files[0]
     else:
-        sorted(files, key=cmp_to_key(timesteps_sort))
-        latest_file = files[0]
+        latest_file = max(files, key=lambda x: os.path.getctime(x))
+
     try:
-        time_steps = int(latest_file.split('_')[2])
+        time_steps = int(os.path.basename(latest_file).split('_')[2])
     except:
         time_steps = -1
 
@@ -89,24 +78,27 @@ class TrainingEndCallBack(BaseCallback, ABC):
         return True
 
 
-def check_algorithm_class(cls: Type[BaseAlgorithm], candidates: List[Type[BaseAlgorithm]]):
+def check_algorithm_class(cls: Type[BaseAlgorithm], candidates: Dict[str, Type[BaseAlgorithm]]):
     """
     To check parameter cls: BaseAlgorithm passed by user.
     :param cls:
     :param candidates:
     :return:
     """
-    if cls in candidates:
-        return cls
-    raise RuntimeError(f"Type {cls} is not supported.")
+    for k,v in candidates.items():
+        if cls is v:
+            return cls
+    raise ValueError(f"Type {cls} is not supported.")
 
 
 class Agent:
     def __init__(
             self,
-            algorithm: Type[BaseAlgorithm],
-            policy: Type[BasePolicy],
+            algorithm: Union[str, Type[BaseAlgorithm]],
+            policy: Union[str, Type[BasePolicy]],
             env: Env = None,
+            root_path: str = None,
+            model_param_path: str = None,
             **kwargs,
     ):
         """
@@ -114,26 +106,38 @@ class Agent:
         :param algorithm:
         :param policy:
         :param env:
+        :param model_param_path: Path to save all model params, uploading this file can help others train their agents.
         :param kwargs:
         """
         # An instance of algorithm class.
         # It will be instantiated when the learn() function is executed.
         self.model = None
-        self.algorithm_class = check_algorithm_class(algorithm, usable_algorithms)
+        if isinstance(algorithm, str):
+            self.algorithm_class = self._get_algo_from_name(algorithm)
+        else:
+            self.algorithm_class = check_algorithm_class(algorithm, usable_algorithms)
         self.policy_class = policy
         self.env = env
         self.id: int = -1  # agent id on the server
+
+        if root_path is None:
+            self.root_path = self._get_next_root_path()
+        else:
+            self.root_path = root_path
 
         # Get the parameters for initializing the algorithm class
         self.init_kv = dict()
         if kwargs:
             try:
-                usable_kv = algorithm.__init__.__code__.co_varnames
+                usable_kv = self.algorithm_class.__init__.__code__.co_varnames
                 for k in kwargs:
                     if k in usable_kv:
                         self.init_kv[k] = kwargs.get(k)
             except:
+                logger.warning(f"Parsing kwargs error. All additional parameters ignored.")
                 self.init_kv = dict()
+
+        self.model_param_path = model_param_path
 
         # learning parameters
         self.tb_log_dir: str = ''
@@ -144,6 +148,23 @@ class Agent:
         self.total_timesteps: int = -1
         self.trained_steps: int = -1
         self.train_log_upload: str = ''
+
+    def _get_algo_from_name(self, algo_name: str) -> Type[BaseAlgorithm]:
+        if algo_name in usable_algorithms:
+            return usable_algorithms[algo_name]
+        else:
+            raise ValueError(f"Algorithm {algo_name} unknown. Usable algorithms: {usable_algorithms.keys()}")
+
+    def _get_next_root_path(self):
+        """
+        Create train infor directory.
+        :return:
+        """
+        cur_path = os.getcwd()
+        training_info_dir = f"{self.env.env_name}_train_info"
+        if os.path.exists(os.path.join(cur_path, training_info_dir)):
+            pass
+
 
     def learn(
             self,
@@ -237,10 +258,17 @@ class Agent:
         if self.trained_steps >= self.total_timesteps:
             # Training steps of the latest checkpoint file is reaches the target total time steps.
             logger.info(f"Save the latest checkpoint model. Trained Steps {self.trained_steps}.")
-            pathlib.Path.rename(os.path.join(self.tb_log_dir, latest_checkpoint), path)
+            os.rename(latest_checkpoint, path)
         else:
             # save model
             self.model.save(path)
+
+        # persist model information of this agent
+        if self.model_param_path is None:
+            self.model_param_path = f"{self.env.env_name}_{self.algorithm_class.__name__.lower()}_{self.model.policy_class.__name__}_param.toml"
+
+        toml_write(vars(self.model), self.model_param_path)
+
 
     @classmethod
     def get(cls, agent_id: int, env: Env = None):

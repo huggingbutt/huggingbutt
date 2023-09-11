@@ -3,19 +3,13 @@ import os.path
 import re
 import subprocess
 from huggingbutt.extend_error import EnvNameErrorException
-from huggingbutt.utils import local_env_path, get_logger, extract_env, file_exists
+from huggingbutt.utils import local_env_path, get_logger, toml_read
 from huggingbutt.network import download_env
 from huggingbutt.unity_gym_env_small_modified import UnityToGymWrapper
 from mlagents_envs.environment import UnityEnvironment
 from stable_baselines3.common.vec_env.dummy_vec_env import DummyVecEnv, VecEnv
 from stable_baselines3.common.monitor import Monitor
 from typing import List
-
-if int(sys.version.split('.')[1]) > 10:
-    import tomllib as toml
-else:
-    import toml
-
 
 logger = get_logger()
 
@@ -65,24 +59,14 @@ class Env(object):
             self.env_path = maybe_path
 
         config_file = os.path.join(self.env_path, 'config.toml')
-        if toml.__name__ == 'toml':
-            with open(file_exists(config_file), 'r') as f:
-                self.config = toml.load(f)
-        elif toml.__name__ == 'tomllib':
-            with open(file_exists(config_file), 'rb') as f:
-                self.config = toml.load(f)
-        else:
-            raise RuntimeError("The toml module is loaded incorrectly.")
+        self.config = toml_read(config_file)
 
-        # check_config_file
+        # need to do check_config_file
         app_config = self.config.get('app', None)
-        self.exe_file = os.path.join(self.env_path, app_config.get('exe_file', None))
+        self.exe_file = os.path.join(self.env_path, app_config.get('exe_file'))
 
-        if self.exe_file is None:
-            raise RuntimeError("Exe file is not defined in configuration file.")
-        else:
-            if not os.path.exists(self.exe_file):
-                raise RuntimeError(f"{self.exe_file} is not found.")
+        assert self.exe_file, "Exe file is not defined in configuration file."
+        assert os.path.exists(self.exe_file), f"{self.exe_file} is not found."
 
     def make_gym_env(self):
         """

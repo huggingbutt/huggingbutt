@@ -1,18 +1,18 @@
-from huggingbutt.env import Env
-from huggingbutt.agent import Agent
-from stable_baselines3.ppo import PPO
-from stable_baselines3.common.policies import ActorCriticPolicy
+from huggingbutt import Env, Agent, set_access_token
 
 
 
 if __name__ == '__main__':
-    env = Env.get("HuggingButt/juggle", 'mac', startup_args=['--time_scale', '10'])
+    set_access_token('08d4db07fe2532a5b629bf7aaf3dc6bc2aba35d3')
+    env = Env.get("huggingbutt/juggle", 'mac', startup_args=['--time_scale', '10'])
     agent = Agent(
-        algorithm=PPO,
-        policy=ActorCriticPolicy,
+        algorithm='PPO',
+        policy='MlpPolicy',
         env=env
     )
-    agent.learn(total_timesteps=8000)
+
+    agent.learn(total_timesteps=1000)
+
     agent.save()
     env.close()
 

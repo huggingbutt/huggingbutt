@@ -1,4 +1,5 @@
 import os
+import sys
 import zipfile
 from pathlib import Path
 import pandas as pd
@@ -6,6 +7,10 @@ from tensorboard.backend.event_processing import event_accumulator
 from huggingbutt import settings
 from huggingbutt.logger_util import get_logger
 
+if int(sys.version.split('.')[1]) > 10:
+    import tomllib as toml
+else:
+    import toml
 
 logger = get_logger()
 
@@ -108,15 +113,18 @@ def extract_tb_log(path: str) -> pd.DataFrame:
     if not os.path.isabs(path):
         path = os.path.abspath(path)
 
-    event_file = ''
-
+    event_files = []
     for root, dirs, files in os.walk(path):
         for file in files:
             if file.find('tfevents'):
-                event_file = os.path.join(root, file)
-                break
+                event_files.append(os.path.join(root, file))
 
-    assert event_file != '', "Not found tensorboard events log file."
+    if len(event_files) == 0:
+        raise FileNotFoundError("Event file not found.")
+    elif len(event_files) == 1:
+        event_file = event_files[0]
+    else:
+        event_file = max(event_files, key=lambda x: os.path.getctime(x))
 
     # load the event log file
     ea = event_accumulator.EventAccumulator(event_file)
@@ -154,3 +162,27 @@ def extract_tb_log(path: str) -> pd.DataFrame:
     df = pd.DataFrame(data)
     df.insert(0, 'steps', steps_col)
     return df
+
+
+def toml_read(path: str) -> dict:
+    if toml.__name__ == 'toml':
+        with open(file_exists(path), 'r') as f:
+            result = toml.load(f)
+    elif toml.__name__ == 'tomllib':
+        with open(file_exists(path), 'rb') as f:
+            result = toml.load(f)
+    else:
+        raise RuntimeError("toml module is loaded incorrectly.")
+
+    return result
+
+
+def toml_write(obj: dict, path: str):
+    if toml.__name__ == 'toml':
+        with open(path, 'w') as f:
+            toml.dump(obj, f)
+    elif toml.__name__ == 'tomllib':
+        with open(path, 'wb') as f:
+            toml.dump(obj, f)
+    else:
+        raise RuntimeError("toml module is loaded incorrectly.")
