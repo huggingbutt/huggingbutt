@@ -1,11 +1,12 @@
 import os
 import pathlib
-from typing import Union, Type, Any, List, TypeVar, Dict
+from typing import Union, Type, Any, List, TypeVar, Dict, Optional
 from functools import cmp_to_key
 from abc import ABC
 from huggingbutt.utils import extract_tb_log
 from huggingbutt.env import Env
-from huggingbutt.utils import file_exists, get_logger, toml_write
+from huggingbutt.utils import file_exists, get_logger, toml_write, local_agent_path, compress
+from huggingbutt.network import download_agent
 from stable_baselines3.common.base_class import BaseAlgorithm
 from stable_baselines3.common.callbacks import BaseCallback, CheckpointCallback
 from stable_baselines3.common.policies import BasePolicy
@@ -19,6 +20,18 @@ usable_algorithms = {
     'DQN': DQN,
     'SAC': SAC
 }
+
+agent_remove_keys = [
+    'ep_info_buffer',
+    '_last_obs',
+    'tensorboard_log',
+    'start_time',
+    '_last_episode_starts',
+    'clip_range',
+    'rollout_buffer',
+    '_logger',
+    'lr_schedule'
+]
 
 logger = get_logger(__name__)
 
@@ -90,7 +103,7 @@ def check_algorithm_class(cls: Type[BaseAlgorithm], candidates: Dict[str, Type[B
     raise ValueError(f"Type {cls} is not supported.")
 
 
-def _get_algo_from_name(algo_name: str) -> Type[BaseAlgorithm]:
+def get_algo_from_name(algo_name: str) -> Type[BaseAlgorithm]:
     if algo_name in usable_algorithms:
         return usable_algorithms[algo_name]
     else:
@@ -115,6 +128,7 @@ class Agent:
             self,
             algorithm: Union[str, Type[BaseAlgorithm]],
             policy: Union[str, Type[BasePolicy]],
+            policy_kwargs: Optional[Dict[str, Any]] = None,
             env: Env = None,
             save_path: str = None,
             **kwargs,
@@ -125,16 +139,19 @@ class Agent:
         :param policy:
         :param env:
         :param train_info_path:
+        :param policy_kwargs:
         :param kwargs:
         """
         # An instance of algorithm class.
         # It will be instantiated when the learn() function is executed.
         self.model = None
         if isinstance(algorithm, str):
-            self.algorithm_class = _get_algo_from_name(algorithm)
+            self.algorithm_class = get_algo_from_name(algorithm)
         else:
             self.algorithm_class = check_algorithm_class(algorithm, usable_algorithms)
         self.policy_class = policy
+        self.policy_kwargs = {} if policy_kwargs is None else policy_kwargs
+
         self.env = env
         self.id: int = -1  # agent id on the server
 
@@ -159,15 +176,18 @@ class Agent:
         self.save_freq: int = -1
         self.total_timesteps: int = -1
         self.trained_steps: int = -1
-
+        # tensorboard log dir
         self.tb_log_dir = os.path.join(
             self.save_path,
             f"{self.env.env_name}_{self.algorithm_class.__name__.lower()}_sb3_tb_log")
         # tb_log_name is the subdirectory in tensorboard log directory
         self.tb_log_name = self.algorithm_class.__name__
+        # training metrics csv file
         self.train_log_upload = os.path.join(
             self.save_path,
             f"{self.env.env_name}_{self.algorithm_class.__name__.lower()}_sb3_log_up.csv")
+
+        # checkpoint dir
         self.checkpoint_dir = os.path.join(
             self.save_path,
             f"{self.env.env_name}_{self.algorithm_class.__name__.lower()}_sb3_model")
@@ -201,6 +221,7 @@ class Agent:
             self.env.make_gym_env(),
             tensorboard_log=self.tb_log_dir,
             verbose=verbose,
+            policy_kwargs=self.policy_kwargs,
             **self.init_kv
         )
 
@@ -232,26 +253,49 @@ class Agent:
             progress_bar=progress_bar
         )
 
+    def resume(self):
+        """
+        todo
+        :return:
+        """
+        pass
+
     def save(self):
-        path = os.path.join(
+        model_file_name = f"{self.env.env_name}_{self.algorithm_class.__name__.lower()}_sb3_model.zip"
+        full_path = os.path.join(
             self.save_path,
-            f"{self.env.env_name}_{self.algorithm_class.__name__.lower()}_sb3_model.zip"
+            model_file_name
         )
 
-        # get latest checkpoint
-        latest_checkpoint, self.trained_steps = get_latest_checkpoint(self.checkpoint_dir)
+        self.model.save(full_path)
+        agent_dict = vars(self.model)
+        agent_dict['policy'] = self.policy_class
+        agent_dict['env'] = f"{self.env.user_name}@{self.env.env_name}@{self.env.version}"
+        agent_dict['model_file'] = model_file_name
 
-        if self.trained_steps >= self.total_timesteps:
-            # Trained steps of the latest checkpoint file is reaches the target total time steps.
-            logger.info(f"Save the latest checkpoint model. Trained Steps {self.trained_steps}.")
-            os.rename(latest_checkpoint, path)
-        else:
-            self.model.save(path)
+        # Variables containing memory information have been deleted.
+        # lr_schedule will be handled in subsequent versions
+        for k in agent_remove_keys:
+            if k in agent_dict:
+                del agent_dict[k]
+        toml_write(agent_dict, self.model_param_path)
 
-        toml_write(vars(self.model), self.model_param_path)
+        # Create zip file that needs to be uploaded
+        compress([full_path, self.model_param_path],
+                 os.path.join(self.save_path, f"agent_{self.algorithm_class.__name__.lower()}_{self.model.policy_class.__name__}.zip"), del_file=True)
+
+
 
     @classmethod
-    def get(cls, agent_id: int, env: Env = None):
-        print(cls)
+    def get(cls, agent_id: int):
+        local_path = local_agent_path(agent_id)
+        if not os.path.exists(local_path):
+            download_agent(agent_id)
+
+        return None
+
+
+
+
 
 

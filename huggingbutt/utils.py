@@ -2,6 +2,7 @@ import os
 import sys
 import zipfile
 from pathlib import Path
+from typing import List
 import pandas as pd
 from tensorboard.backend.event_processing import event_accumulator
 from huggingbutt import settings
@@ -78,23 +79,36 @@ def touch_succ_env(user_name, env_name, version):
     Path(success_path).touch()
 
 
-def agent_download_dest_path(user_name: str, agent_name: str, version: str, env_user_name: str, env_name: str):
+def agent_download_dest_path(agent_id: int):
     """
     Return the local absolute path of the agent to download
-    :param user_name:
-    :param agent_name:
-    :param version:
+    :param agent_id
     :return:
     """
-    return os.path.join(settings.real_cache_path, 'zip', f"{user_name}@{agent_name}@{version}@{env_user_name}@{env_name}.zip")
+    return os.path.join(settings.real_cache_path, 'zip', f"agent_{agent_id}.zip")
 
 
 def local_env_path(user_name, env_name, version):
     return os.path.join(settings.env_path, user_name, env_name, version)
 
 
+def local_agent_path(agent_id: int):
+    return os.path.join(settings.agent_path, str(agent_id))
+
+
+def compress(files: List[str], desc_path, del_file=False):
+    with zipfile.ZipFile(desc_path, 'w') as zip:
+        for file in files:
+            zip.write(file)
+
+    if del_file:
+        for f in files:
+            os.remove(f)
+
+
+
 def extract(zip_path, dest_path):
-    with zipfile.ZipFile(zip_path, "r") as zip:
+    with zipfile.ZipFile(zip_path, 'r') as zip:
         zip.extractall(dest_path)
 
 
