@@ -102,6 +102,7 @@ def download_agent(agent_id: int):
     logger.info(f"Download agent {agent_id}.")
     agent_url = f"{settings.hub_url}/download/agent/{agent_id}/"
     dest_path = utils.agent_download_dest_path(agent_id)
+    print(agent_url)
     download(agent_url, dest_path)
 
     logger.info(f"Extract agent {agent_id}")

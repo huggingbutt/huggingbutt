@@ -99,7 +99,7 @@ def local_agent_path(agent_id: int):
 def compress(files: List[str], desc_path, del_file=False):
     with zipfile.ZipFile(desc_path, 'w') as zip:
         for file in files:
-            zip.write(file)
+            zip.write(file, arcname=os.path.basename(file))
 
     if del_file:
         for f in files:
@@ -120,7 +120,7 @@ def extract_env(user_name, env_name, version):
 
 def extract_tb_log(path: str) -> pd.DataFrame:
     """
-    Extract data from tensorboard log files for upload to the server.
+    Extract data from tensorboard log file
     :param path:
     :return:
     """
