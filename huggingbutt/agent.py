@@ -1,11 +1,6 @@
-import copy
 import os
-import pathlib
 from typing import Union, Type, Any, List, TypeVar, Dict, Optional
-from functools import cmp_to_key
 from abc import ABC
-from collections import deque
-
 import numpy as np
 
 from huggingbutt.utils import extract_tb_log
@@ -33,7 +28,22 @@ agent_keys = [
     '_total_timesteps',
     '_num_timesteps_at_start',
     'learning_rate',
-
+    'use_sde',
+    'sde_sample_freq',
+    '_n_updates',
+    'observation_space',
+    'action_space',
+    'n_envs',
+    'n_steps',
+    'gamma',
+    'gae_lambda',
+    'ent_coef',
+    'vf_coef',
+    'max_grad_norm',
+    'batch_size',
+    'n_epochs',
+    'normalize_advantage',
+    'policy_kwargs'
 ]
 
 logger = get_logger(__name__)
@@ -165,7 +175,7 @@ class Agent:
         self.pretrained = pretrained
 
         if pretrained:
-            self.model = self.algorithm_class.load(model_file, env=self.env.gym_env)
+            self.model = self.algorithm_class.load(model_file, env.make_gym_env())
         else:
             self.model = None
 
@@ -235,6 +245,8 @@ class Agent:
                 policy_kwargs=self.policy_kwargs,
                 **self.init_kv
             )
+        else:
+            self.model.tensorboard_log = self.tb_log_dir
 
         # persist model information
         self.model_param_path = os.path.join(self.save_path, f"config.toml")
@@ -272,23 +284,20 @@ class Agent:
         model_file_name = 'model.zip'
         full_path = os.path.join(self.save_path,model_file_name)
 
+        # Save important training information to file
         agent_dict = dict()
         agent_dict['algorithm_class'] = self.algorithm_class.__name__
         agent_dict['policy'] = self.policy_class
-        agent_dict['env'] = f"{self.env.user_name}@{self.env.env_name}@{self.env.version}"
+        agent_dict['env'] = f"{self.env.user_name}/{self.env.env_name}@{self.env.version}"
         agent_dict['model_file'] = model_file_name
-
-
-        # Variables containing memory information have been deleted.
-        for k in agent_remove_keys:
-            if k in agent_dict:
-                del agent_dict[k]
+        for k in agent_keys:
+            agent_dict[k] = self.model.__dict__.get(k)
 
         # lr_schedule will be handled in subsequent versions
-        if 'lr_schedule' in agent_dict:
-            del agent_dict['lr_schedule']
 
-        # clearn model
+        toml_write(agent_dict, self.model_param_path)
+
+        # clearn model,
         self.model.ep_info_buffer.clear()
         self.model.tensorboard_log = 'tb_log'
         self.model._last_obs = np.array([])
@@ -296,12 +305,8 @@ class Agent:
 
         self.model.save(full_path)
 
-        toml_write(agent_dict, self.model_param_path)
-
         # Create zip file that needs to be uploaded
         compress([full_path, self.model_param_path], os.path.join(self.save_path, f"hb_{self.env.env_name}_{self.algorithm_class.__name__.lower()}.zip"), del_file=True)
-
-
 
     @classmethod
     def get(cls, agent_id: int, env: Env):
@@ -311,11 +316,11 @@ class Agent:
 
         assert os.path.isfile(os.path.join(local_path, 'config.toml')), 'config.toml file not found.'
         config = toml_read(os.path.join(local_path, 'config.toml'))
-        algorithm_cls = config['algorithm_class']
-        policy_cls = config['policy']
-        model_file = config['model_file']
+        algorithm_cls = config.get('algorithm_class')
+        policy_cls = config.get('policy')
+        model_file = config.get('model_file')
         full_name = os.path.join(local_path, model_file)
-        policy_kwargs = config['policy_kwargs']
+        policy_kwargs = config.get('policy_kwargs')
 
         instance = cls(
             env=env,

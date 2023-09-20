@@ -87,6 +87,21 @@ class Env(object):
         self.gym_env = DummyVecEnv([make_env()])
         return self.gym_env
 
+    def agent_list(self):
+        """
+        List all agents of this environment.
+        :return:
+        """
+        pass
+
+    def get_agent(self, agent_id: int):
+        """
+        Instance an agent for this environment by agent_id.
+        :param agent_id:
+        :return:
+        """
+        pass
+
     @classmethod
     def get(cls, env_name, version, startup_args: List[str] = None):
         """
@@ -107,6 +122,7 @@ class Env(object):
             download_env(user_name, env_name, version)
             if sys.platform in ('linux', 'darwin'):
                 subprocess.run(['chmod', '-R', '755', local_path])
+
         instance = cls(
             user_name=user_name,
             env_name=env_name,
