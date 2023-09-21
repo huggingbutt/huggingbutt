@@ -14,12 +14,11 @@ if __name__ == '__main__':
         policy='MlpPolicy',
         batch_size=256
     )
-    agent.learn(total_timesteps=20000)
+    agent.learn(total_timesteps=500000)
     agent.save()
     env.close()
-    # agent = Agent.get(17, env)
-    # agent.learn(1000)
-    # agent.save()
+    # agent = Agent.get(19, env)
+    # print(agent)
     # env.close()
 
 

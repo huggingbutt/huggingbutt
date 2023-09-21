@@ -2,6 +2,7 @@ import os
 from typing import Union, Type, Any, List, TypeVar, Dict, Optional
 from abc import ABC
 import numpy as np
+import pandas as pd
 
 from huggingbutt.utils import extract_tb_log
 from huggingbutt.env import Env
@@ -146,6 +147,7 @@ class Agent:
             save_path: str = None,
             pretrained: bool = False,
             model_file: str = None,
+            agent_id: int = None,
             **kwargs,
     ):
         """
@@ -156,6 +158,8 @@ class Agent:
         :param policy_kwargs:
         :param save_path:
         :param pretrained:
+        :param model_file:
+        :param agent_id:
         :param kwargs:
         """
         # An instance of algorithm class.
@@ -170,12 +174,13 @@ class Agent:
         self.policy_kwargs = {} if policy_kwargs is None else policy_kwargs
 
         self.env = env
-        self.id: int = -1  # agent id on the server
+        self.agent_id: int = -1  # agent id on the server
 
         self.pretrained = pretrained
 
         if pretrained:
             self.model = self.algorithm_class.load(model_file, env.make_gym_env())
+            self.agent_id = agent_id
         else:
             self.model = None
 
@@ -212,6 +217,9 @@ class Agent:
         # checkpoint dir
         self.checkpoint_dir = os.path.join(self.save_path, 'checkpoints')
         self.checkpoint_name_prefix = self.algorithm_class.__name__.lower()
+
+        self.model_file_name = 'model.zip'
+        self.model_ful_path = os.path.join(self.save_path, self.model_file_name)
 
     def learn(
             self,
@@ -281,17 +289,26 @@ class Agent:
         pass
 
     def save(self):
-        model_file_name = 'model.zip'
-        full_path = os.path.join(self.save_path,model_file_name)
+
 
         # Save important training information to file
         agent_dict = dict()
         agent_dict['algorithm_class'] = self.algorithm_class.__name__
         agent_dict['policy'] = self.policy_class
         agent_dict['env'] = f"{self.env.user_name}/{self.env.env_name}@{self.env.version}"
-        agent_dict['model_file'] = model_file_name
+        agent_dict['model_file'] = self.model_file_name
         for k in agent_keys:
             agent_dict[k] = self.model.__dict__.get(k)
+
+        if self.pretrained:
+            agent_dict['base_agent'] = self.agent_id
+
+        try:
+            df = pd.read_csv(self.train_log_upload)
+            latest_metrics = df.iloc[-1].to_dict()
+            agent_dict['ep_rew_mean'] = latest_metrics.get('ep_rew_mean')
+        except:
+            logger.warning('Get ep_rew_mean error.')
 
         # lr_schedule will be handled in subsequent versions
 
@@ -303,10 +320,11 @@ class Agent:
         self.model._last_obs = np.array([])
         self.model._last_episode_starts = np.array([])
 
-        self.model.save(full_path)
+        self.model.save(self.model_ful_path)
 
         # Create zip file that needs to be uploaded
-        compress([full_path, self.model_param_path], os.path.join(self.save_path, f"hb_{self.env.env_name}_{self.algorithm_class.__name__.lower()}.zip"), del_file=True)
+        compress([self.model_ful_path, self.model_param_path], os.path.join(self.save_path, f"hb_{self.env.env_name}_{self.algorithm_class.__name__.lower()}.zip"), del_file=True)
+
 
     @classmethod
     def get(cls, agent_id: int, env: Env):
@@ -328,7 +346,8 @@ class Agent:
             policy=policy_cls,
             policy_kwargs=policy_kwargs,
             pretrained=True,
-            model_file=full_name
+            model_file=full_name,
+            agent_id=agent_id
         )
 
         return instance
