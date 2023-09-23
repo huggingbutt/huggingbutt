@@ -2,6 +2,7 @@ import sys
 import os.path
 import re
 import subprocess
+from typing import Tuple, Dict, Any, SupportsFloat, Optional
 from huggingbutt.extend_error import EnvNameErrorException
 from huggingbutt.utils import local_env_path, get_logger, toml_read
 from huggingbutt.network import download_env
@@ -9,6 +10,7 @@ from huggingbutt.unity_gym_env_small_modified import UnityToGymWrapper
 from mlagents_envs.environment import UnityEnvironment
 from stable_baselines3.common.vec_env.dummy_vec_env import DummyVecEnv, VecEnv
 from stable_baselines3.common.monitor import Monitor
+from gymnasium.core import ActType, ObsType, Env
 from typing import List
 
 logger = get_logger()
@@ -30,7 +32,8 @@ class Env(object):
     ):
         """
 
-        :param name:
+        :param user_name:
+        :param env_name:
         :param version:
         :param env_path:
         :param base_port:
@@ -43,11 +46,10 @@ class Env(object):
         self.base_port = base_port
         self.startup_args = startup_args
         self.env_path: str = env_path
-        self.config: dict = None
-        self.exe_file = None
-        self.gym_env = None
+        self.config: dict = {}
+        self.exe_file: Optional[str] = None
+        self.gym_env: Optional[Env] = None
         self.load_config()
-
 
     def load_config(self):
         """
@@ -55,7 +57,8 @@ class Env(object):
         """
         if self.env_path is None:
             maybe_path = local_env_path(self.user_name, self.env_name, self.version)
-            assert os.path.exists(maybe_path), "The parameter env_path is not given, and did not find this environment locally."
+            assert os.path.exists(maybe_path), "The parameter env_path is not given, " \
+                                               "and did not find this environment locally."
             self.env_path = maybe_path
 
         config_file = os.path.join(self.env_path, 'config.toml')
@@ -131,6 +134,16 @@ class Env(object):
             startup_args=startup_args
         )
         return instance
+
+    def reset(self, **kwargs) -> Tuple[ObsType, Dict[str, Any]]:
+        if self.gym_env is None:
+            self.make_gym_env()
+        return self.gym_env.reset(**kwargs)
+
+    def step(self, action: ActType) -> Tuple[ObsType, SupportsFloat, bool, bool, Dict[str, Any]]:
+        if self.gym_env is None:
+            raise RuntimeError('You need to execute function reset() first.')
+        return self.gym_env.step(action)
 
     def close(self):
         self.gym_env.close()

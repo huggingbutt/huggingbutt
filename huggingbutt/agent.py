@@ -1,5 +1,5 @@
 import os
-from typing import Union, Type, Any, List, TypeVar, Dict, Optional
+from typing import Union, Type, Any, Dict, Optional, Tuple
 from abc import ABC
 import numpy as np
 import pandas as pd
@@ -182,7 +182,7 @@ class Agent:
             self.model = self.algorithm_class.load(model_file, env.make_gym_env())
             self.agent_id = agent_id
         else:
-            self.model = None
+            self.model: Optional[BaseAlgorithm] = None
 
         if save_path is None:
             curr_path = os.getcwd()
@@ -198,14 +198,14 @@ class Agent:
                 for k in kwargs:
                     if k in usable_kv:
                         self.init_kv[k] = kwargs.get(k)
-            except:
+            except AttributeError:
                 logger.warning(f"Parsing kwargs error. All additional parameters ignored.")
                 self.init_kv = dict()
 
         self.save_freq: int = -1
         self.total_timesteps: int = -1
         self.trained_steps: int = -1
-        self.model_param_path = ''
+        self.model_param_path: Optional[str] = None
 
         # tensorboard log dir
         self.tb_log_dir = os.path.join(self.save_path, 'tb_log')
@@ -289,8 +289,6 @@ class Agent:
         pass
 
     def save(self):
-
-
         # Save important training information to file
         agent_dict = dict()
         agent_dict['algorithm_class'] = self.algorithm_class.__name__
@@ -307,7 +305,7 @@ class Agent:
             df = pd.read_csv(self.train_log_upload)
             latest_metrics = df.iloc[-1].to_dict()
             agent_dict['ep_rew_mean'] = latest_metrics.get('ep_rew_mean')
-        except:
+        except (FileNotFoundError, IndexError):
             logger.warning('Get ep_rew_mean error.')
 
         # lr_schedule will be handled in subsequent versions
@@ -325,6 +323,17 @@ class Agent:
         # Create zip file that needs to be uploaded
         compress([self.model_ful_path, self.model_param_path], os.path.join(self.save_path, f"hb_{self.env.env_name}_{self.algorithm_class.__name__.lower()}.zip"), del_file=True)
 
+    def predict(
+            self,
+            observation: Union[np.ndarray, Dict[str, np.ndarray]],
+            state: Optional[Tuple[np.ndarray, ...]] = None,
+            episode_start: Optional[np.ndarray] = None,
+            deterministic: bool = False,
+    ) -> Tuple[np.ndarray, Optional[Tuple[np.ndarray, ...]]]:
+        if self.model is None:
+            raise RuntimeError("model is None.")
+
+        return self.model.predict(observation, state, episode_start, deterministic)
 
     @classmethod
     def get(cls, agent_id: int, env: Env):
@@ -334,11 +343,16 @@ class Agent:
 
         assert os.path.isfile(os.path.join(local_path, 'config.toml')), 'config.toml file not found.'
         config = toml_read(os.path.join(local_path, 'config.toml'))
-        algorithm_cls = config.get('algorithm_class')
-        policy_cls = config.get('policy')
-        model_file = config.get('model_file')
+
+        try:
+            algorithm_cls = config['algorithm_class']
+            policy_cls = config['policy']
+            model_file = config['model_file']
+            policy_kwargs = config['policy_kwargs']
+        except KeyError:
+            raise RuntimeError('Agent config.toml is incomplete!!')
+
         full_name = os.path.join(local_path, model_file)
-        policy_kwargs = config.get('policy_kwargs')
 
         instance = cls(
             env=env,
