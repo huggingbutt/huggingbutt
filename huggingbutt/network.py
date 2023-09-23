@@ -1,10 +1,9 @@
 import os
 import requests
-from pathlib import Path
 from tqdm import tqdm
 from huggingbutt import settings
 from huggingbutt import utils
-from huggingbutt.utils import get_logger, get_access_token, check_token, local_env_path, extract
+from huggingbutt.utils import get_logger, get_access_token, check_token, local_env_path, extract, local_agent_path
 from huggingbutt.extend_error import AccessTokenNotFoundException, HubAccessException, VersionNotFoundException
 
 
@@ -84,15 +83,26 @@ def download_env(user_name: str, env_name: str, version: str):
     # todo...
     # Download the latest version by default.
     # if version == 'latest':
-    #     version = get_latest_version(user_name, env_name)
+    #     version = get_remote_latest_version(user_name, env_name)
     # if version == '':
     #     raise VersionNotFoundException()
 
     logger.info(f"Download {user_name}/{env_name}:{version}.")
-    env_url = f"{settings.hub_url}/download/envs/{user_name}/{env_name}_{version}.zip"
+    env_url = f"{settings.hub_url}/download/env/{user_name}/{env_name}_{version}.zip"
     dest_path = utils.env_download_dest_path(user_name, env_name, version)
     download(env_url, dest_path)
 
     logger.info(f"Extract {user_name}/{env_name}:{version}.")
     extract_path = local_env_path(user_name, env_name, version)
+    extract(dest_path, extract_path)
+
+
+def download_agent(agent_id: int):
+    logger.info(f"Download agent {agent_id}.")
+    agent_url = f"{settings.hub_url}/download/agent/{agent_id}/"
+    dest_path = utils.agent_download_dest_path(agent_id)
+    download(agent_url, dest_path)
+
+    logger.info(f"Extract agent {agent_id}")
+    extract_path = local_agent_path(agent_id)
     extract(dest_path, extract_path)
