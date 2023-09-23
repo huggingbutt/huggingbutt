@@ -129,7 +129,6 @@ def get_next_path(path: str):
     count = 1
     while True:
         if not os.path.exists(dir_name):
-            os.mkdir(dir_name)
             break
         else:
             dir_name = f"{path}_{count}"
@@ -243,6 +242,9 @@ class Agent:
         assert self.env is not None, "env is None"
 
         self.total_timesteps = total_timesteps  # this is your target total time steps.
+
+        if not os.path.exists(self.save_path):
+            os.mkdir(self.save_path)
 
         if not self.pretrained:
             self.model = self.algorithm_class(
