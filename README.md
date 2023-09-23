@@ -1,5 +1,5 @@
-# HuggingButt Python Client 
-Client library to download and publish environments, agents on the huggingbutt.com hub
+# HuggingButt
+Client library to download and publish reinforcement learning environments, agents on the huggingbutt.com hub
 
 ## Installation
 After testing, this package can run stably under python version 3.9 on Windows/MacOS platform. Other versions of python may not be able to install this package,  I will address these issues later on. 
@@ -20,12 +20,12 @@ pip install huggingbutt
 ```
 or from source code
 ```shell
-git clone xxx
+git clone https://github.com/huggingbutt/huggingbutt.git
 cd huggingbutt
 python -m pip install .
 ```
 
-If there is no error message printed during the installation, congratulations, you have successfully installed this package. Next, you need to apply an access token from the official website http://huggingbutt.com.
+If there is no error message printed during the installation, congratulations, you have successfully installed this package. Next, you need to apply an access token from the official website https://huggingbutt.com.
 
 Register an account and login, just do as shown in the image below.
 

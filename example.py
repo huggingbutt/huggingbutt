@@ -21,5 +21,4 @@ if __name__ == '__main__':
         obs, reward, done, info = env.step(act)
         if done:
             obs = env.reset()
-
     env.close()
