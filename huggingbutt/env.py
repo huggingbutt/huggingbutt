@@ -27,7 +27,8 @@ class Env(object):
             env_name: str,
             version: str,
             env_path: str = None,
-            base_port: int = 5000,
+            base_port: int = 5005,
+            work_id: int = 0,
             startup_args: List[str] = None
     ):
         """
@@ -37,6 +38,7 @@ class Env(object):
         :param version:
         :param env_path:
         :param base_port:
+        :param work_id:
         :param startup_args:
         """
         self.user_name: str = user_name
@@ -44,6 +46,7 @@ class Env(object):
         self.version: str = version
         self.id: int = -1  # env id on the server
         self.base_port = base_port
+        self.work_id = work_id
         self.startup_args = startup_args
         self.env_path: str = env_path
         self.config: dict = {}
@@ -81,7 +84,10 @@ class Env(object):
 
         def make_env():  # pylint: disable=C0111
             def _thunk():
-                unity_env = UnityEnvironment(self.exe_file, base_port=self.base_port, additional_args=self.startup_args)
+                unity_env = UnityEnvironment(self.exe_file,
+                                             base_port=self.base_port,
+                                             additional_args=self.startup_args,
+                                             worker_id=self.work_id)
                 env = UnityToGymWrapper(unity_env, uint8_visual=False, allow_multiple_obs=False)
                 env = Monitor(env)
                 return env
@@ -106,12 +112,19 @@ class Env(object):
         pass
 
     @classmethod
-    def get(cls, env_name, version, startup_args: List[str] = None):
+    def get(cls,
+            env_name,
+            version,
+            base_port: int = 5005,
+            work_id: int = 0,
+            startup_args: List[str] = None):
         """
         Returns a gym-type training environment through the specified environment name.
         If there is no such environment locally, it will be downloaded from the remote server.
         :param env_name:
         :param version:
+        :param base_port:
+        :param work_id:
         :param startup_args:
         :return:
         """
@@ -131,6 +144,8 @@ class Env(object):
             env_name=env_name,
             version=version,
             env_path=local_path,
+            base_port=base_port,
+            work_id=work_id,
             startup_args=startup_args
         )
         return instance

@@ -16,8 +16,10 @@ from mlagents_envs import logging_util
 logger = logging_util.get_logger(__name__)
 GymStepResult = Tuple[np.ndarray, float, bool, bool, Dict[str, Any]]
 
+
 class UnityGymException(error.Error):
     pass
+
 
 class UnityToGymWrapper(gym.Env):
     """
