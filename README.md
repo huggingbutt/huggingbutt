@@ -2,7 +2,7 @@
 Client library to download and publish reinforcement learning environments/agents on the huggingbutt.com hub
 
 ## Installation
-This project only supports Python 3.10, going up to version 3.10.12 at most, this is due to the base dependency 'mlagents-envs' limiting the Python version. I'll fix this in the future.
+This project only supports Python 3.10, and the highest version is 3.10.12. This is due to restrictions from the dependency 'mlagents-envs'. I'll address this issue in subsequent release.
 
 Create a new python environment using anaconda/miniconda.
 ```shell
