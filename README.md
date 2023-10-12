@@ -1,12 +1,12 @@
 # HuggingButt
-Client library to download and publish reinforcement learning environments, agents on the huggingbutt.com hub
+Client library to download and publish reinforcement learning environments/agents on the huggingbutt.com hub
 
 ## Installation
-After testing, this package can run stably under python version 3.9 on Windows/MacOS platform. Other versions of python may not be able to install this package,  I will address these issues later on. 
+This project only supports Python 3.10, going up to version 3.10.12 at most, this is due to the base dependency 'mlagents-envs' limiting the Python version. I'll fix this in the future.
 
 Create a new python environment using anaconda/miniconda.
 ```shell
-conda create -n hb python==3.9
+conda create -n hb python==3.10.12
 ```
 
 activate the new python environment.
