@@ -17,11 +17,11 @@ logger = get_logger()
 
 
 def get_access_token():
-    return os.environ.get("AGENTHUB_ACCESS_TOKEN")
+    return os.environ.get("HUGGINGBUTT_ACCESS_TOKEN")
 
 
 def set_access_token(token):
-    os.environ["AGENTHUB_ACCESS_TOKEN"] = token
+    os.environ["HUGGINGBUTT_ACCESS_TOKEN"] = token
 
 
 def check_path(path):
