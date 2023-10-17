@@ -218,7 +218,7 @@ class Agent:
         self.checkpoint_name_prefix = self.algorithm_class.__name__.lower()
 
         self.model_file_name = 'model.zip'
-        self.model_ful_path = os.path.join(self.save_path, self.model_file_name)
+        self.model_full_path = os.path.join(self.save_path, self.model_file_name)
 
     def learn(
             self,
@@ -288,7 +288,6 @@ class Agent:
         todo
         :return:
         """
-        pass
 
     def save(self):
         # Save important training information to file
@@ -320,10 +319,13 @@ class Agent:
         self.model._last_obs = np.array([])
         self.model._last_episode_starts = np.array([])
 
-        self.model.save(self.model_ful_path)
+        self.model.save(self.model_full_path)
 
-        # Create zip file that needs to be uploaded
-        compress([self.model_ful_path, self.model_param_path], os.path.join(self.save_path, f"hb_{self.env.env_name}_{self.algorithm_class.__name__.lower()}.zip"), del_file=True)
+        # Compress files to upload.
+        compress([self.model_full_path, self.model_param_path],
+                 os.path.join(self.save_path,
+                              f"hb_{self.env.env_name}_{self.algorithm_class.__name__.lower()}.zip"),
+                 del_file=False)
 
     def predict(
             self,
@@ -338,10 +340,17 @@ class Agent:
         return self.model.predict(observation, state, episode_start, deterministic)
 
     @classmethod
-    def get(cls, agent_id: int, env: Env):
-        local_path = local_agent_path(agent_id)
-        if not os.path.exists(local_path):
-            download_agent(agent_id)
+    def get(cls,
+            env: Env,
+            agent_id: int = -1,
+            local_path: str = None):
+
+        assert not(agent_id == -1 and local_path is None), 'Please give agent_id or local_path'
+
+        if agent_id != -1:
+            local_path = local_agent_path(agent_id)
+            if not os.path.exists(local_path):
+                download_agent(agent_id)
 
         assert os.path.isfile(os.path.join(local_path, 'config.toml')), 'config.toml file not found.'
         config = toml_read(os.path.join(local_path, 'config.toml'))

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "huggingbutt"
-version = "0.0.3"
+version = "0.0.4"
 authors = [
   { name="huggingbutt", email="huggingbutt@outlook.com" },
 ]
@@ -12,13 +12,16 @@ description = "Client library to download and publish environments, agents on th
 readme = "README.md"
 requires-python = ">=3.10.1,<=3.10.12"
 dependencies = [
+    "grpcio>=1.11.0,<=1.48.2",
+    "protobuf>=3.6,<3.20",
+    "numpy>=1.13.3,<2.0",
     "tqdm",
     "requests",
     "stable_baselines3>=2.1.0",
     "mlagents-envs>=1.0.0",
+    "tensorboard>=2.14",
     "toml",
-    "tensorboard",
-    "pandas"
+    "pandas==1.5.3"
 ]
 classifiers = [
     "Programming Language :: Python :: 3",

@@ -8,14 +8,13 @@ if __name__ == '__main__':
     #     env=env,
     #     algorithm='PPO',
     #     policy='MlpPolicy',
-    #     batch_size=256
+    #     batch_size=64
     # )
-    # agent.learn(total_timesteps=10000)
+    # agent.learn(total_timesteps=20000)
     # agent.save()
     # env.close()
 
-    agent = Agent.get(20, env)
-
+    agent = Agent.get(env, agent_id=15)
     obs = env.reset()
     for i in range(100):
         act, _status_ = agent.predict(obs)
