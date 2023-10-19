@@ -2,11 +2,12 @@
 Client library to download and publish reinforcement learning environments/agents on the huggingbutt.com hub
 
 ## Installation
-This project only supports Python 3.10, and the highest version is 3.10.12. This is due to restrictions from the dependency 'mlagents-envs'. I'll address this issue in subsequent release.
+The base dependency mlagents-envs has been update to version 1.0.0. However, this version may cause error(on Windows 10). This is due to the package specifying numpy version 1.21.2, which might fail to build on Python 3.10 (Windows 10). I have had two colleagues test it and they encountered the same issues. So, to avoid conflicts, mlagents-envs==0.30.0, NumPy==1.21.2 in this project. MacOS is OK.
+For the reason above, to ensure safety, we will use Python 3.9.
 
 Create a new python environment using anaconda/miniconda.
 ```shell
-conda create -n hb python==3.10.12
+conda create -n hb python=3.9
 ```
 
 activate the new python environment.
@@ -16,7 +17,7 @@ conda activate hb
 
 install huggingbutt from pypi
 ```shell
-pip install huggingbutt
+pip install huggingbutt==0.0.5
 ```
 or from source code
 ```shell
@@ -47,13 +48,13 @@ from huggingbutt import Env, Agent, set_access_token
 
 if __name__ == '__main__':
     set_access_token('YOUR_TOKEN')
-    env = Env.get("huggingbutt/juggle", 'mac', startup_args=['--time_scale', '1'])
+    env = Env.get("huggingbutt/juggle", 'mac', startup_args=['--time_scale', '10'])
 
     agent = Agent(
         env=env,
         algorithm='PPO',
         policy='MlpPolicy',
-        batch_size=256
+        batch_size=64
     )
     agent.learn(total_timesteps=10000)
     agent.save()
@@ -66,7 +67,7 @@ from huggingbutt import Env, Agent, set_access_token
 if __name__ == '__main__':
     set_access_token('YOUR_TOKEN')
     env = Env.get("huggingbutt/juggle", 'mac', startup_args=['--time_scale', '1'])
-    agent = Agent.get(20, env)
+    agent = Agent.get(15, env)
 
     obs = env.reset()
     for i in range(100):
