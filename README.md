@@ -17,7 +17,7 @@ conda activate hb
 
 install huggingbutt from pypi
 ```shell
-pip install huggingbutt
+pip install huggingbutt==0.0.5
 ```
 or from source code
 ```shell
@@ -48,13 +48,13 @@ from huggingbutt import Env, Agent, set_access_token
 
 if __name__ == '__main__':
     set_access_token('YOUR_TOKEN')
-    env = Env.get("huggingbutt/juggle", 'mac', startup_args=['--time_scale', '1'])
+    env = Env.get("huggingbutt/juggle", 'mac', startup_args=['--time_scale', '10'])
 
     agent = Agent(
         env=env,
         algorithm='PPO',
         policy='MlpPolicy',
-        batch_size=256
+        batch_size=64
     )
     agent.learn(total_timesteps=10000)
     agent.save()
@@ -67,7 +67,7 @@ from huggingbutt import Env, Agent, set_access_token
 if __name__ == '__main__':
     set_access_token('YOUR_TOKEN')
     env = Env.get("huggingbutt/juggle", 'mac', startup_args=['--time_scale', '1'])
-    agent = Agent.get(20, env)
+    agent = Agent.get(15, env)
 
     obs = env.reset()
     for i in range(100):
