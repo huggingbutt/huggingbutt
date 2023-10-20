@@ -2,7 +2,7 @@
 Client library to download and publish reinforcement learning environments/agents on the huggingbutt.com hub
 
 ## Installation
-The base dependency mlagents-envs has been update to version 1.0.0. However, this version may cause error(on Windows 10). This is due to the package specifying numpy version 1.21.2, which might fail to build on Python 3.10 (Windows 10). I have had two colleagues test it and they encountered the same issues. So mlagents-envs==0.30.0, NumPy==1.21.2 in this project. MacOS is OK.
+The base dependency mlagents-envs has been update to version 1.0.0. However, this version may rise an error [Issue 5996](https://github.com/Unity-Technologies/ml-agents/issues/5996)(on Windows 10). So I specified mlagents-envs==0.30.0, NumPy==1.21.2 in this project. I did not found this issue on MacOS.
 
 Create a new python environment using anaconda/miniconda. Only Python 3.9.
 ```shell
