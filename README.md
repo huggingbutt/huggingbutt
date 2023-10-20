@@ -4,7 +4,7 @@ Client library to download and publish reinforcement learning environments/agent
 ## Installation
 The base dependency mlagents-envs has been update to version 1.0.0. However, this version may rise an error [Issue 5996](https://github.com/Unity-Technologies/ml-agents/issues/5996)(on Windows 10). So I specified mlagents-envs==0.30.0, NumPy==1.21.2 in this project. I did not found this issue on MacOS.
 
-Create a new python environment using anaconda/miniconda. Only Python 3.9.
+Create a new python environment using anaconda/miniconda. Only Python 3.9!!
 ```shell
 conda create -n hb python==3.9.18
 ```
@@ -79,5 +79,5 @@ if __name__ == '__main__':
 
 # todo
 1. Support more types learning environment, such as native game wrapped by python, pygame, class gym...
-2. Develop a framework, user can customize the observation, action and reward of the environment developed under this framework. We hope this makes it easier for everyone to iterate the environment's agent.
+2. Develop a framework, user can customize the observation, action and reward of the environment developed under this framework. I hope this makes it easier for everyone to iterate the environment's agent.
 3. There are still many ideas, I will add them later when I think about them...
