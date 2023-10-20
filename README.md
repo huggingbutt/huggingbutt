@@ -20,7 +20,7 @@ pip install huggingbutt==0.0.5
 ```
 or from source code
 ```shell
-git clone https://github.com/huggingbutt/huggingbutt.git
+git clone -b v0.0.5 https://github.com/huggingbutt/huggingbutt.git
 cd huggingbutt
 python -m pip install .
 ```
