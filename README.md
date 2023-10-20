@@ -1,5 +1,6 @@
 # HuggingButt
-Client library to download and publish reinforcement learning environments/agents on the huggingbutt.com hub
+Client library to download and publish reinforcement learning environments/agents on the huggingbutt.com hub.
+Join our Discord: https://discord.gg/fnrKcgPR9r
 
 ## Installation
 The base dependency mlagents-envs has been update to version 1.0.0. However, this version may rise an error [Issue 5996](https://github.com/Unity-Technologies/ml-agents/issues/5996)(on Windows 10). So I specified mlagents-envs==0.30.0, NumPy==1.21.2 in this project. I did not found this issue on MacOS.
