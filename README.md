@@ -42,7 +42,25 @@ Congratulations, you now have an access token!
 
 Just put the generated token in the task code and you're gooooood to go.
 
-Here is a simple training code:
+Here is a simple inference code:
+```python
+from huggingbutt import Env, Agent, set_access_token
+
+if __name__ == '__main__':
+    set_access_token('YOUR_TOKEN')
+    env = Env.get("huggingbutt/juggle", 'mac', startup_args=['--time_scale', '1'])
+    agent = Agent.get(env, agent_id=15)
+
+    obs = env.reset()
+    for i in range(100):
+        act, _status_ = agent.predict(obs)
+        obs, reward, done, info = env.step(act)
+        if done:
+            obs = env.reset()
+    env.close()
+```
+
+Training your agent for this environment. 
 ```python
 from huggingbutt import Env, Agent, set_access_token
 
@@ -60,23 +78,8 @@ if __name__ == '__main__':
     agent.save()
     env.close()
 ```
-Inference:
-```python
-from huggingbutt import Env, Agent, set_access_token
 
-if __name__ == '__main__':
-    set_access_token('YOUR_TOKEN')
-    env = Env.get("huggingbutt/juggle", 'mac', startup_args=['--time_scale', '1'])
-    agent = Agent.get(15, env)
-
-    obs = env.reset()
-    for i in range(100):
-        act, _status_ = agent.predict(obs)
-        obs, reward, done, info = env.step(act)
-        if done:
-            obs = env.reset()
-    env.close()
-```
+**I really really look forward to you uploading the environment you made or the agent you trained to huggingbutt.com for everyone to study.**
 
 # todo
 1. Support more types learning environment, such as native game wrapped by python, pygame, class gym...
