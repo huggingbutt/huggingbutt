@@ -78,7 +78,8 @@ if __name__ == '__main__':
     agent.save()
     env.close()
 ```
-I strongly hope you can upload it to huggingbutt.com to help everyone improve their agent performance.
+
+**I really really look forward to you uploading the environment you made or the agent you trained to huggingbutt.com for everyone to study.**
 
 # todo
 1. Support more types learning environment, such as native game wrapped by python, pygame, class gym...
