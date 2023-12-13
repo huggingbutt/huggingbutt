@@ -79,7 +79,64 @@ if __name__ == '__main__':
     env.close()
 ```
 
-**I really really look forward to you uploading the environment you made or the agent you trained to huggingbutt.com for everyone to study.**
+**I'm incredibly excited for you to upload the environment/agent you trained to huggingbutt.com. It would be amazing for everyone to study!**
+
+## Upload your environment
+### 1. Create a workspace directory.
+Example:
+~/huggingbutt/your_environment_name
+
+
+### 2. Build your environment
+Build your environment created based on Unity ML-Agents, save it to "your_environment_name/unity_package_name"
+
+###  3. Create config.toml file
+Create a config.toml file in "your_environment_name" directory to specify where to load the executable from for the environment. Add the following content to the file.
+
+Mac:
+```toml
+[app]
+  exe_file="unity_package_name/game.app"
+```
+Windows:
+```toml
+[app]
+  exe_file="unity_package_name/game.exe"
+```
+Example:
+
+![image](https://raw.githubusercontent.com/huggingbutt/media_store/main/huggingbutt_readme/files_list_mac.png)
+
+### 4. Package and compress
+You must ensure that after extracting the zip file, config.toml file is located in the root directory.
+![image](https://raw.githubusercontent.com/huggingbutt/media_store/main/huggingbutt_readme/compress_all_files.png)
+
+### 5. Upload zip file
+Click "Add Env"
+
+![image](https://raw.githubusercontent.com/huggingbutt/media_store/main/huggingbutt_readme/add_env_web.png)
+
+Fill in basic information
+
+![image](https://raw.githubusercontent.com/huggingbutt/media_store/main/huggingbutt_readme/fill_env_base_info.png)
+
+We will redirect into add new version page after clicking "Save" button.
+
+![image](https://raw.githubusercontent.com/huggingbutt/media_store/main/huggingbutt_readme/new_version.png)
+
+Click "My Envs" will list your environments.
+
+![image](https://raw.githubusercontent.com/huggingbutt/media_store/main/huggingbutt_readme/my_envs_list.png)
+
+Click the name of your environment will enter the detail page.
+
+![image](https://raw.githubusercontent.com/huggingbutt/media_store/main/huggingbutt_readme/env_detail.png)
+
+Click the blue badge named "* Versions" will list all versions of this environment.
+
+![image](https://raw.githubusercontent.com/huggingbutt/media_store/main/huggingbutt_readme/version_list.png)
+
+Click "New Version" will enter add new version page.
 
 # todo
 1. Support more types learning environment, such as native game wrapped by python, pygame, class gym...
