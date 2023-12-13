@@ -90,8 +90,39 @@ Example:
 ### 2. Build your environment
 Build your environment created based on Unity ML-Agents, save it to "your_environment_name/unity_package_name"
 
+Filesystem structure:
+
+Mac:
+```
+└── huggingbutt
+    └── your_environment_name
+        ├── your_environment_name.app
+        └── your_environment_name_BurstDebugInformation_DoNotShip
+```
+
+Windows:
+```
+└── huggingbutt
+    └── your_environment_name
+        ├── your_environment_name.exe
+        └── ...
+        └── ...
+```
+
+
 ###  3. Create config.toml file
-Create a config.toml file in "your_environment_name" directory to specify where to load the executable from for the environment. Add the following content to the file.
+Create a config.toml file in "your_environment_name" directory to specify where to load the executable from for the environment. 
+
+Filesystem structure:
+```
+└── huggingbutt
+    ├── config.toml
+    └── your_environment_name
+        ├── your_environment_name.app
+        └── your_environment_name_BurstDebugInformation_DoNotShip
+```
+
+Add the following content to config.toml
 
 Mac:
 ```toml
@@ -103,6 +134,7 @@ Windows:
 [app]
   exe_file="unity_package_name/game.exe"
 ```
+
 Example:
 
 ![image](https://raw.githubusercontent.com/huggingbutt/media_store/main/huggingbutt_readme/files_list_mac.png)
