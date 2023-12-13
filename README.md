@@ -158,15 +158,11 @@ We will redirect into add new version page after clicking "Save" button.
 
 Click "My Envs" will list your environments.
 
-![image](https://raw.githubusercontent.com/huggingbutt/media_store/main/huggingbutt_readme/my_envs_list.png)
-
 Click the name of your environment will enter the detail page.
 
 ![image](https://raw.githubusercontent.com/huggingbutt/media_store/main/huggingbutt_readme/env_detail.png)
 
 Click the blue badge named "* Versions" will list all versions of this environment.
-
-![image](https://raw.githubusercontent.com/huggingbutt/media_store/main/huggingbutt_readme/version_list.png)
 
 Click "New Version" will enter add new version page.
 
