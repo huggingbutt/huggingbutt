@@ -3,11 +3,11 @@ Client library to download and publish reinforcement learning environments/agent
 Join our Discord: https://discord.gg/fnrKcgPR9r
 
 ## Installation
-The base dependency mlagents-envs has been update to version 1.0.0. However, this version may rise an error [Issue 5996](https://github.com/Unity-Technologies/ml-agents/issues/5996)(on Windows 10). So I specified mlagents-envs==0.30.0, NumPy==1.21.2 in this project. I did not found this issue on MacOS.
+Removed dependency on ml-agents and added support for tiptoestep in the current version.
 
-Create a new python environment using anaconda/miniconda. Only Python 3.9!!
+Create a new python environment using anaconda/miniconda. 
 ```shell
-conda create -n hb python==3.9.18
+conda create -n hb
 ```
 
 activate the new python environment.
@@ -44,44 +44,60 @@ Just put the generated token in the task code and you're gooooood to go.
 
 Here is a simple inference code:
 ```python
-from huggingbutt import Env, Agent, set_access_token
+import numpy as np
+from huggingbutt import set_access_token, load_env, load_agent
+
+HB_TOKEN = "YOUR_TOKEN"
+set_access_token(HB_TOKEN)
 
 if __name__ == '__main__':
-    set_access_token('YOUR_TOKEN')
-    env = Env.get("huggingbutt/juggle", 'mac', startup_args=['--time_scale', '1'])
-    agent = Agent.get(env, agent_id=15)
-
-    obs = env.reset()
-    for i in range(100):
+    env = load_env("huggingbutt/roller_ball", "mac", silent=True, num=1, time_scale=20)
+    agent = load_agent(4)
+    obs, info = env.reset()
+    steps = []
+    rewards = []
+    prev_i = 0
+    epoch_reward = 0
+    for i in range(1_000):
         act, _status_ = agent.predict(obs)
-        obs, reward, done, info = env.step(act)
-        if done:
-            obs = env.reset()
+        obs, reward, terminated, truncated, info = env.step(act)
+        epoch_reward += reward
+
+        if terminated:
+            obs, info = env.reset()
+            # Statistics
+            steps.append(i - prev_i)
+            rewards.append(epoch_reward)
+            prev_i = i
+            epoch_reward = 0
+
     env.close()
+    print(f"Played {len(steps)} times.")
+    print("Mean steps:{}".format(np.mean(steps)))
+    print("Mean reward:{}".format(np.mean(rewards)))
 ```
 
 Training your agent for this environment. 
 ```python
-from huggingbutt import Env, Agent, set_access_token
+import numpy as np
+from huggingbutt import set_access_token, load_env, load_agent
+
+HB_TOKEN = "YOUR_TOKEN"
+set_access_token(HB_TOKEN)
 
 if __name__ == '__main__':
-    set_access_token('YOUR_TOKEN')
-    env = Env.get("huggingbutt/juggle", 'mac', startup_args=['--time_scale', '10'])
-
-    agent = Agent(
-        env=env,
-        algorithm='PPO',
-        policy='MlpPolicy',
-        batch_size=64
-    )
-    agent.learn(total_timesteps=10000)
-    agent.save()
+    model = PPO(
+        "MlpPolicy",
+        env,
+        verbose=1,
+        n_steps=1024,
+        tensorboard_log="./logs")
+    
+    model.learn(total_timesteps=1_000_000)
+    model.save(f"roller_ball.zip")
+    
     env.close()
 ```
 
-**I really really look forward to you uploading the environment you made or the agent you trained to huggingbutt.com for everyone to study.**
-
 # todo
 1. Support more types learning environment, such as native game wrapped by python, pygame, class gym...
-2. Develop a framework, user can customize the observation, action and reward of the environment developed under this framework. I hope this makes it easier for everyone to iterate the environment's agent.
-3. There are still many ideas, I will add them later when I think about them...
