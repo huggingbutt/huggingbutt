@@ -1,6 +1,8 @@
 import sys
 import logging
-from huggingbutt import settings
+from . import settings
+
+
 def get_logger(name: str = settings.default_logger_name_) -> logging.Logger:
     """
     Copied From mlagents official project.

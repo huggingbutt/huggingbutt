@@ -1,12 +1,18 @@
 import os
+import shutil
+
 import requests
 from tqdm import tqdm
-from huggingbutt import settings
-from huggingbutt import utils
-from huggingbutt.utils import get_logger, get_access_token, check_token, local_env_path, extract, local_agent_path
-from huggingbutt.extend_error import AccessTokenNotFoundException, HubAccessException, VersionNotFoundException
-
-
+from . import settings
+from .extend_error import AccessTokenNotFoundException, HubAccessException
+from .utils import (get_logger,
+                    get_access_token,
+                    check_token,
+                    local_env_path,
+                    extract,
+                    local_agent_path,
+                    env_download_dest_path,
+                    agent_download_dest_path)
 
 logger = get_logger(__name__)
 
@@ -18,6 +24,7 @@ def get_headers(access_token):
         "Authorization": f"Token {access_token}"
     }
     return headers
+
 
 # todo...
 # Get the latest version from a remote server
@@ -34,6 +41,7 @@ def get_agent_md5(user_name, agent_name, version):
 # Get the md5 of the env from a remote server
 def get_env_md5(user_name, env_name, version):
     pass
+
 
 # Determine whether the downloaded file matches the remote md5
 def md5check(file, md5):
@@ -89,7 +97,7 @@ def download_env(user_name: str, env_name: str, version: str):
 
     logger.info(f"Download {user_name}/{env_name}:{version}.")
     env_url = f"{settings.hub_url}/download/env/{user_name}/{env_name}_{version}.zip"
-    dest_path = utils.env_download_dest_path(user_name, env_name, version)
+    dest_path = env_download_dest_path(user_name, env_name, version)
     download(env_url, dest_path)
 
     logger.info(f"Extract {user_name}/{env_name}:{version}.")
@@ -100,9 +108,13 @@ def download_env(user_name: str, env_name: str, version: str):
 def download_agent(agent_id: int):
     logger.info(f"Download agent {agent_id}.")
     agent_url = f"{settings.hub_url}/download/agent/{agent_id}/"
-    dest_path = utils.agent_download_dest_path(agent_id)
+    dest_path = agent_download_dest_path(agent_id)
     download(agent_url, dest_path)
 
-    logger.info(f"Extract agent {agent_id}")
-    extract_path = local_agent_path(agent_id)
-    extract(dest_path, extract_path)
+    # For previous version
+    # logger.info(f"Extract agent {agent_id}")
+    # extract_path = local_agent_path(agent_id)
+    # extract(dest_path, extract_path)
+
+    target_file_name = local_agent_path(agent_id)
+    shutil.move(dest_path, f"{target_file_name}.zip")

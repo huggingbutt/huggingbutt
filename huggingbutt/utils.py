@@ -5,8 +5,8 @@ from pathlib import Path
 from typing import List
 import pandas as pd
 from tensorboard.backend.event_processing import event_accumulator
-from huggingbutt import settings
-from huggingbutt.logger_util import get_logger
+from . import settings
+from .logger_util import get_logger
 
 if int(sys.version.split('.')[1]) > 10:
     import tomllib as toml
@@ -104,7 +104,6 @@ def compress(files: List[str], desc_path, del_file=False):
     if del_file:
         for f in files:
             os.remove(f)
-
 
 
 def extract(zip_path, dest_path):

@@ -1,6 +1,6 @@
 import os
-from huggingbutt import settings
-from huggingbutt import utils
+from . import settings
+from . import utils
 
 logger = utils.get_logger(__name__)
 

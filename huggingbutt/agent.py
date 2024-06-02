@@ -4,16 +4,16 @@ from abc import ABC
 import numpy as np
 import pandas as pd
 
-from huggingbutt.utils import extract_tb_log
-from huggingbutt.env import Env
-from huggingbutt.utils import file_exists, get_logger, toml_write, local_agent_path, compress, toml_read
-from huggingbutt.network import download_agent
+from .utils import extract_tb_log
+from .env import Env
+from .utils import file_exists, get_logger, toml_write, local_agent_path, compress, toml_read
+from .network import download_agent
 from stable_baselines3.common.base_class import BaseAlgorithm
 from stable_baselines3.common.callbacks import BaseCallback, CheckpointCallback
 from stable_baselines3.common.policies import BasePolicy
 from stable_baselines3 import PPO, A2C, DDPG, TD3, DQN, SAC
 
-usable_algorithms = {
+usable_algorithms: dict[str, Type[BaseAlgorithm]] = {
     'PPO': PPO,
     'A2C': A2C,
     'DDPG': DDPG,
@@ -111,7 +111,7 @@ def check_algorithm_class(cls: Type[BaseAlgorithm], candidates: Dict[str, Type[B
     :param candidates:
     :return:
     """
-    for k,v in candidates.items():
+    for k, v in candidates.items():
         if cls is v:
             return cls
     raise ValueError(f"Type {cls} is not supported.")
@@ -150,7 +150,7 @@ class Agent:
             **kwargs,
     ):
         """
-
+        **** The Agent class is not needed in the current version. ***
         :param env:
         :param algorithm:
         :param policy:
@@ -378,7 +378,34 @@ class Agent:
         return instance
 
 
+def load_agent(agent_id, model_class=None, local_file=None) -> BaseAlgorithm:
+    """
+    Load agent, if not available locally, download from huggingbutt.com
+    :return:
+    """
+    if local_file is None:
+        local_file = "{}.zip".format(local_agent_path(agent_id))
 
+    if not os.path.exists(local_file):
+        download_agent(agent_id)
 
+    model = None
+    if model_class is not None:
+        if model_class in usable_algorithms:
+            model = usable_algorithms[model_class].load(local_file)
+    else:
+        # It is recommended that user specifies the algorithm type.
+        # Otherwise, all possible types must be iterated through,
+        # which may not guarantee correct loading.
+        for model_class in usable_algorithms.values():
+            try:
+                model = model_class.load(local_file)
+                logger.info(f"Model loaded as {model_class.__name__}")
+                break
+            except Exception as e:
+                pass
 
+    if model is None:
+        raise RuntimeError("Failed to load model. Make sure the model path is correct and the model type is supported.")
 
+    return model
