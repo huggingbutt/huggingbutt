@@ -51,7 +51,7 @@ HB_TOKEN = "YOUR_TOKEN"
 set_access_token(HB_TOKEN)
 
 if __name__ == '__main__':
-    env = load_env("huggingbutt/roller_ball", "mac", silent=True, num=1, time_scale=20)
+    env = load_env("huggingbutt/roller_ball", "mac", silent=False, num=1, time_scale=20)
     agent = load_agent(4)
     obs, info = env.reset()
     steps = []
@@ -86,11 +86,12 @@ HB_TOKEN = "YOUR_TOKEN"
 set_access_token(HB_TOKEN)
 
 if __name__ == '__main__':
+    env = load_env("huggingbutt/roller_ball", "mac", silent=True, num=3, time_scale=20)
     model = PPO(
         "MlpPolicy",
         env,
         verbose=1,
-        n_steps=1024,
+        n_steps=512,
         tensorboard_log="./logs")
     
     model.learn(total_timesteps=1_000_000)
