@@ -15,13 +15,9 @@ activate the new python environment.
 conda activate hb
 ```
 
-install huggingbutt from pypi
+from source code
 ```shell
-pip install huggingbutt==0.0.5
-```
-or from source code
-```shell
-git clone -b v0.0.5 https://github.com/huggingbutt/huggingbutt.git
+git clone https://github.com/huggingbutt/huggingbutt.git
 cd huggingbutt
 python -m pip install .
 ```
@@ -109,51 +105,47 @@ Example:
 
 
 ### 2. Build your environment
-Build your environment created based on Unity ML-Agents, save it to "your_environment_name/unity_package_name"
+Build your environment created based on tiptoestep. Build the environment in two ways:
+1. Regular build mode, which renders the graphical interface. This mode is suitable for demonstrations or use on Windows platform.
+![image](https://github.com/huggingbutt/media_store/blob/main/huggingbutt_readme/Screenshot%202024-06-10%20at%2014.05.56.png?raw=true)
+2. Dedicated Server build mode, which does not render the graphical interface and is optimized for training speed. However, this mode is only supported on Linux and macOS platforms.Consider naming the environment built under Dedicated Server mode as "your_environment_name_silent"
+![image](https://github.com/huggingbutt/media_store/blob/main/huggingbutt_readme/Screenshot%202024-06-10%20at%2014.06.10.png?raw=true)
 
 Filesystem structure:
 
 Mac:
 ```
 └── huggingbutt
-    └── your_environment_name
-        ├── your_environment_name.app
-        └── your_environment_name_BurstDebugInformation_DoNotShip
-```
-
-Windows:
-```
-└── huggingbutt
-    └── your_environment_name
-        ├── your_environment_name.exe
-        └── ...
-        └── ...
+    ├── config.toml
+    ├── default_functions.py
+    ├── your_environment_name.app
+    └── your_environment_name_silent
 ```
 
 
 ###  3. Create config.toml file
 Create a config.toml file in "your_environment_name" directory to specify where to load the executable from for the environment. 
 
-Filesystem structure:
-```
-└── huggingbutt
-    ├── config.toml
-    └── your_environment_name
-        ├── your_environment_name.app
-        └── your_environment_name_BurstDebugInformation_DoNotShip
-```
-
 Add the following content to config.toml
 
 Mac:
 ```toml
 [app]
-  exe_file="unity_package_name/game.app"
-```
-Windows:
-```toml
-[app]
-  exe_file="unity_package_name/game.exe"
+	exe_file = "you_environment_name.app/Contents/MacOS/you_environment"
+	silent_file = "you_environment_name_silent/you_environment"
+	system = "macos"
+	engine = "unity"
+[action]
+	type = "ContinuousAction"
+	space = "box"
+	shape = 2
+	low = -1.0
+	high = 1.0
+[observation]
+	space = "box"
+	shape = 12
+[function]
+	file = "default_functions.py
 ```
 
 Example:
